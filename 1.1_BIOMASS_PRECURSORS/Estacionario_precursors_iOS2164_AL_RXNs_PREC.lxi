@@ -1,0 +1,17 @@
+B 3 C o m p i l a t i o n
+B 19235 Equation Listing    SOLVE FBA Using LP From line 19206
+D 19238 fmiu
+D 19243 balance
+B 19255 Column Listing      SOLVE FBA Using LP From line 19206
+E 19258 miu
+E 19265 v
+B 19378 Range Statistics    SOLVE FBA Using LP From line 19206
+B 19389 Model Statistics    SOLVE FBA Using LP From line 19206
+B 19402 Solution Report     SOLVE FBA Using LP From line 19206
+F 19437 fmiu
+F 19441 balance
+G 21759 miu
+G 21761 v
+B 24450 E x e c u t i o n
+I 24450 v
+I 24460 miu
