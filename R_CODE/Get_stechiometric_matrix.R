@@ -314,6 +314,49 @@ message("Obtaining consumed and produced metabolites")
   
   stech_mat_graph <- do.call(rbind,stech_mat_graph)
   write.csv(stech_mat_graph,paste0(out_dir,"/",out_name,"_graph.csv"),na = "",row.names = F)
+  
+  
+  
+  #bipartite graph
+  x_graph_direct_list <- list()
+  for(i in 2:ncol(stech_mat)){
+    #print(i)
+    #i <- 2
+    consumption <- stech_mat$met[stech_mat[,i]<0]
+    if(length(consumption)>0){
+      x1 <- data.frame(source=consumption,
+                       target= colnames(stech_mat)[i],
+                       edge="consumption",
+                       rxn=colnames(stech_mat)[i]) 
+    }
+    production <- stech_mat$met[stech_mat[,i]>0]
+    if(length(production)>0){
+      x2 <- data.frame(source= colnames(stech_mat)[i],
+                       target=production,
+                       edge="production",
+                       rxn=colnames(stech_mat)[i])
+    }
+    if(exists("x1") & exists("x2")){
+      x_graph_direct <- rbind(x1,x2)
+    } else if(exists("x1") & !exists("x2")){
+      x_graph_direct <- x1
+      x_graph_direct$edge <- "exchange"
+    } else if(!exists("x1") & exists("x2")){
+      x_graph_direct <- x2
+      x_graph_direct$edge <- "demand"
+    }  else if(!exists("x1") & !exists("x2")){
+      x_graph_direct <- NULL
+    }
+    x_graph_direct_list[[i]] <- x_graph_direct
+    rm(x_graph_direct,consumption,production,x1,x2)
+  };rm(i)
+  
+  x_graph_direct_list <- do.call(rbind,x_graph_direct_list)
+  write.csv(x_graph_direct_list,paste0(out_dir,"/",out_name,"_biparte_graph.csv"),na = "",row.names = F)
+  
+  
+  
+  
   }
   ##############################################################################}
   message("Saving results in a list")
@@ -337,7 +380,9 @@ message("Obtaining consumed and produced metabolites")
 
 
 #dir <- "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA"
-dir <- "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/MANUAL"
+#dir <- "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/MANUAL"
+#dir <- "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/INTENTO"
+dir <- "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation"
 #dir <- "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES"
 
 # rxn_dict <- readxl::read_xlsx(paste0(dir,"/","TOCOBRA.xlsx"),sheet = "Reaction List")
@@ -349,7 +394,10 @@ dir <- "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA
 #rxn_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/MANUAL/TOCOBRA_V4AA_FIXED.xlsx",sheet = "Reaction List")
 
 
-rxn_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/MANUAL/TOCOBRA_V7_G.xlsx",sheet = "Reaction List")
+#rxn_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/MANUAL/TOCOBRA_V7_G.xlsx",sheet = "Reaction List")
+#rxn_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/INTENTO/DM2_CYC/iOS2215_DM4_5.xlsx",sheet = "Reaction List")
+rxn_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/iOS2215_DM4.xlsx",sheet = "Reaction List")
+#rxn_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/iOS2215_DM2.xlsx",sheet = "Reaction List")
 rxn_ids <- rxn_dict$Abbreviation
 bounds <- cbind(rxn_dict$`Lower bound`,rxn_dict$`Upper bound`)
 #rxn_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/TOCOBRA_V4AA_FIXED.xlsx",sheet = "Reaction List")
@@ -365,20 +413,27 @@ rxn_dict <- rxn_dict$Reaction
 
 #met_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/MANUAL/TOCOBRA_V4AA_FIXED.xlsx",sheet = "Metabolite List")
 
-met_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/MANUAL/TOCOBRA_V7_G.xlsx",sheet = "Metabolite List")
+#met_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/MANUAL/TOCOBRA_V7_G.xlsx",sheet = "Metabolite List")
+
+#met_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/INTENTO/DM2_CYC/iOS2215_DM4_5.xlsx",sheet = "Metabolite List")
+met_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/iOS2215_DM4.xlsx",sheet = "Metabolite List")
+#met_dict <- readxl::read_xlsx("D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/iOS2215_DM2.xlsx",sheet =  "Metabolite List")
+
+
 #met_dict <- readxl::read_xlsx(paste0(dir,"/","1.xlsx"),sheet = "Metabolite List")
 met_dict <- met_dict$Abbreviation
 sep_rxn <- " "
-out_dir <- "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/MANUAL"#paste0(dir,"/","R")
+#out_dir <- "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/COBRA/CYCLES/MANUAL"#paste0(dir,"/","R")
+out_dir <- "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/INTENTO/GRAPH"
 #out_name <- "CURATION_V4"
-out_name <- "CURATION_V7_CYC"
+out_name <- "CURATION_DM4_20231216"
 save_xlsx=T
 
-print(round(length(met_dict)/length(rxn_dict)*1,3))
-
+print(round(length(rxn_dict)/length(met_dict)*1,3))
+#rxn_dict
 x <- GetStoichiometry(met_dict,rxn_dict,sep_rxn,rxn_ids=NULL,bounds,save_xlsx,out_dir,out_name,get_network = T)
 
-# write.table(x$stech_matrix,paste0(dir,"/R_files/","stochiometric_mat.tsv"),quote =F,na = "",row.names = F,sep = "\t")
+  # write.table(x$stech_matrix,paste0(dir,"/R_files/","stochiometric_mat.tsv"),quote =F,na = "",row.names = F,sep = "\t")
 # write.table(x$summary_metabolites,paste0(dir,"/R_files/","summary_met.tsv"),quote =F,na = "",row.names = F,sep = "\t")
 # write.table(x$summary_reactions,paste0(dir,"/","summary_rxn.tsv"),quote =F,na = "",row.names = F,sep = "\t")
 # write.table(x$changes,paste0(dir,"/R_files/","summary_changes.tsv"),quote =F,na = "",row.names = F,sep = "\t")

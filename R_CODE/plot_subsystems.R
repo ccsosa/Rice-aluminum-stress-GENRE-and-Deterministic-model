@@ -101,13 +101,49 @@ subs_df <- subs_df[-1,]
 subs_df2 <- subs_df2[-1,]
 #subs_df2 <- as.data.frame(t(subs_df2))
 ################################################################################
-upset(subs_df2, order.by = "freq",sets = scenarios,keep.order = T, nintersects = NA,#nintersects = 100,
-      text.scale = c(2, 2, 2, 2, 2, 2))
 
+library(Polychrome)
+set.seed(1000)
+P36 <- createPalette(12, c("#0000FF", "#ff0000"), M=10000,target = "normal")
+names(P36) <- colnames(subs_df)#levels(col$scenario)
+P36_2 <- P36[4:12]
+df_up <- subs_df2[,c(4:12)]
+df_up <- df_up[rowSums(df_up)>0,]
+
+upset(df_up,#subs_df2, 
+      order.by = "freq",
+      query.legend = "top",#color.pal = "gray",
+      #sets.bar.color=P36,#c("maroon","blue","orange")
+      sets.bar.color=P36_2,#c("maroon","blue","orange")
+      keep.order = T,point.size = 5,
+      matrix.color = "gray50",line.size = 1,
+      main.bar.color = "gray30",set_size.show = F,
+      nintersects=NA,mainbar.y.label = "Number of reactions",
+      sets.x.label = "Aluminum scenario (µM)",
+      #sets = scenarios,#scenarios[4:12],
+      sets = scenarios[4:12],
+      #nintersects = 100,
+      text.scale = c(2, 2, 2, 2, 2, 2),#,
+      queries = list(
+      #5000
+        list(query = intersects,
+             params = list("5000"),
+             color = P36[[8]], active = T, query.name = "5000")
+      )
+)
+################################################################################
 write.csv(subs_df2,paste0(
   "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/FLUX_RESULTS/SC2/results/",
   "/",
   "shared_subsystems.csv"),row.names = T,quote = T,na = "")
+
+write.csv(df_up,paste0(
+  "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/FLUX_RESULTS/SC2/results/",
+  "/",
+  "shared_subsystems_biomass.csv"),row.names = T,quote = T,na = "")
+
+
+
 write.csv(subs_df,paste0(
   "D:/PROGRAMAS/Dropbox/shared/Metabolic_network_manual_curation/GAMS/FLUX_RESULTS/SC2/results/",
   "/",
@@ -452,3 +488,4 @@ save_pheatmap_pdf(
   height = 50
 )
 };rm(i)
+
